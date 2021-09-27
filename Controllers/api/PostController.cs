@@ -17,7 +17,7 @@ namespace WonderBlogs.Controllers.api
 
         //1=jack, 4 jessica (writers)
         //2= editor
-        private const int USUARIO = 2;
+        private const int USUARIO = 1;
 
 
         #region properties
