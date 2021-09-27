@@ -1,0 +1,239 @@
+﻿@using Utils;
+<br>
+<br>
+
+<div>
+    <img src="~/Image/Add.png">
+    @Html.ActionLink("New Post", "PostForm", "Post", new { @class = "form-control" }, null)
+</div>
+
+<br>
+<br>
+<div class="table-responsive">
+    <table class="table table-bordered table-hover" id="TableId">
+        <thead>
+            <tr style="font-size:small">
+                <th>Id</th>
+                <th>Title</th>
+                <th>Body</th>
+                <th>Author</th>
+                <th>State</th>
+                <th>Comment</th>
+                <th>Published Date</th>
+                <th>Edit</th>
+                <th>Delete</th>
+                <th>Send</th>
+                <th>Review</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
+@section scripts
+{
+    <script src="~/js/datatables.js" type="text/javascript" debug="true"></script>
+    <script src="~/js/bootbox.js" type="text/javascript" debug="true"></script>
+
+
+    <script>
+           $(document).ready(function () {
+
+           $("#TableId").DataTable({
+                ajax: {
+                    url: "/api/post/",
+                    dataSrc: ""
+                },
+                columns: [
+                    {
+                        data: "id"
+                    },
+                    {
+                        data: "title"
+                    },
+
+                    {
+                        data: "body"
+                    },
+
+                    {
+                        data: "author.login"
+                    },
+                    {
+                        data: "state.state"
+                    },
+
+                    {
+                        data: "state.comment"
+                    },
+                    {
+                        data: "publishedDate"
+                    },
+                     {
+                    mRender: function (data, type, row) {
+                            var linkEdit = '<input type="image" src="../image/edit.png" id="btnEdit" value="-1">';
+                            linkEdit = linkEdit.replace("-1", row.id);
+                            return linkEdit;
+                        }
+                    },
+                     {
+                    mRender: function (data, type, row) {
+                            var linkEdit = '<input type="image" src="../image/delete.png" id="btnDelete" value="-1">';
+                            linkEdit = linkEdit.replace("-1", row.id);
+                            return linkEdit;
+                        }
+                    },
+                    {
+                    mRender: function (data, type, row) {
+                            var linkEdit = '<input type="image" src="../image/send.png" id="btnSend" value="-1">';
+                            linkEdit = linkEdit.replace("-1", row.id);
+                            return linkEdit;
+                        }
+                    },
+                    {
+                    mRender: function (data, type, row) {
+                            var linkEdit = '<input type="image" src="../image/review.png" id="btnReview" value="-1">';
+                            linkEdit = linkEdit.replace("-1", row.id);
+                            return linkEdit;
+                        }
+                    },
+
+                ]
+            }
+            );
+
+
+            //Boton send
+               $(document).on('click', '#btnSend', function () {
+                var button = this;
+                //alert(button.value);
+                bootbox.confirm("Are you sure to send this post to review?", function (result) {
+                    if (result) {
+                        var id = button.value;
+
+                       $.ajax({
+                            type: 'GET',
+                           url: "/api/post/validateToReview/" + id,
+                            dataType: 'json',
+                           success: function (data, textStatus, xhr) {
+
+                                if (data==@Global.postStateNotValid) {
+                                    bootbox.alert("The state of the post is not valid to send to review");
+                                }
+                                else if(data==@Global.allOk)
+                                {
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: "/api/post/send/" + id,
+                                        success: function () {
+                                            bootbox.confirm("The post was send to review!", function (result) {
+                                                $("#TableId").DataTable().ajax.reload();
+                                            });
+
+                                        },
+                                        error: function () {
+                                            bootbox.alert('An error ocurred, please try again!');
+                                        }
+                                    });
+
+                                }
+                            },
+                            error: function (resp) {
+                                alert(resp);
+                            }
+                        });
+                    }
+                });
+
+            });
+
+
+            //Boton review
+               $(document).on('click', '#btnReview', function () {
+                var button = this;
+
+                        var id = button.value;
+                       $.ajax({
+                            type: 'GET',
+                           url: "/api/post/validateToCheck/" + id,
+                            dataType: 'json',
+                           success: function (data, textStatus, xhr) {
+
+                                if (data==@Global.postStateNotValid) {
+                                    bootbox.alert("The state of the post is not valid for review");
+                                }
+                                else if(data==@Global.allOk)
+                                {
+
+                                    alert("Editor entra a revisar");
+
+                                }
+                            },
+                            error: function (resp) {
+                                alert(resp);
+                            }
+                        });
+
+
+            });
+
+            //Boton review
+            $(document).on('click', '#btnEdit', function () {
+            var button = this;
+
+                    var id = button.value;
+                    $.ajax({
+                        type: 'GET',
+                        url: "/api/post/validateToEdit/" + id,
+                        dataType: 'json',
+                        success: function (data, textStatus, xhr) {
+
+                            if (data==@Global.postStateNotValid) {
+                                bootbox.alert("The state of the post is not valid to edit");
+                            }
+                            else if(data==@Global.allOk)
+                            {
+                                window.location.href = "/post/postForm/" + id;
+
+                            }
+                        },
+                        error: function (resp) {
+                            alert(resp);
+                        }
+                    });
+            });
+
+            //Boton review
+            $(document).on('click', '#btnDelete', function () {
+            var button = this;
+
+                    var id = button.value;
+                    $.ajax({
+                        type: 'GET',
+                        url: "/api/post/validateToDelete/" + id,
+                        dataType: 'json',
+                        success: function (data, textStatus, xhr) {
+
+                            if (data==@Global.postStateNotValid) {
+                                bootbox.alert("The state of the post is not valid to delete");
+                            }
+                            else if(data==@Global.allOk)
+                            {
+
+                                alert("Escritor elimina");
+
+                            }
+                        },
+                        error: function (resp) {
+                            alert(resp);
+                        }
+                    });
+            });
+
+
+               $('#TableId').css('font-size', '12px');
+        });
+    </script>
+
+}
